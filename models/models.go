@@ -6,12 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type User struct {
-	ID    uuid.UUID `json:"id" validate:"required,uuid"`
-	Name  string    `json:"name" validate:"required"`
-	Email string    `json:"email" validate:"required,email"`
-}
-
 type Movie struct {
 	ID          uuid.UUID `json:"id" validate:"required,uuid"`
 	Title       string    `json:"title" validate:"required"`
@@ -39,13 +33,4 @@ type Review struct {
 	ReviewText string    `json:"review_text" validate:"required,lte=500"`
 	CreatedAt  time.Time `json:"created_at" validate:"required"`
 	UpdatedAt  time.Time `json:"updated_at" validate:"required"`
-}
-
-type List struct {
-	ListID      uuid.UUID `json:"list_id" validate:"required,uuid"`
-	UserID      uuid.UUID `json:"user_id" validate:"required,uuid"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at" validate:"required"`
-	UpdatedAt   time.Time `json:"updated_at" validate:"required"`
 }
