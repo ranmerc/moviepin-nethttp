@@ -1,47 +1,15 @@
-INSERT INTO users (username, email, password_hash)
+INSERT INTO users (user_id, username, email, password)
 VALUES
-  ('username', 'email@example.com', 'hashed_password');
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'dummyuser1', 'dummy@email.com', 'dummyhash1');
+
+INSERT INTO movies (movie_id, title, release_date, genre, director, description)
+VALUES
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 'Dummy Movie 1', '2021-01-01', 'Action', 'Dummy Director 1', 'A dummy description 1.'),
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 'Dummy Movie 2', '2021-01-02', 'Comedy', 'Dummy Director 2', 'A dummy description 2.');
 
 
-INSERT INTO movies (title, release_date, genre, director, description)
-VALUES
-  ('Dummy Movie 1', '2022-01-01', 'Action', 'Dummy Director 1', 'A dummy movie description 1.'),
-  ('Dummy Movie 2', '2022-02-01', 'Comedy', 'Dummy Director 2', 'A dummy movie description 2.'),
-  ('Dummy Movie 3', '2022-03-01', 'Drama', 'Dummy Director 3', 'A dummy movie description 3.'),
-  ('Dummy Movie 4', '2022-04-01', 'Science Fiction', 'Dummy Director 4', 'A dummy movie description 4.'),
-  ('Dummy Movie 5', '2022-05-01', 'Thriller', 'Dummy Director 5', 'A dummy movie description 5.'),
-  ('Dummy Movie 6', '2022-06-01', 'Adventure', 'Dummy Director 6', 'A dummy movie description 6.'),
-  ('Dummy Movie 7', '2022-07-01', 'Mystery', 'Dummy Director 7', 'A dummy movie description 7.'),
-  ('Dummy Movie 8', '2022-08-01', 'Fantasy', 'Dummy Director 8', 'A dummy movie description 8.'),
-  ('Dummy Movie 9', '2022-09-01', 'Horror', 'Dummy Director 9', 'A dummy movie description 9.'),
-  ('Dummy Movie 10', '2022-10-01', 'Romance', 'Dummy Director 10', 'A dummy movie description 10.'),
-  ('Dummy Movie 11', '2022-11-01', 'Sci-Fi', 'Dummy Director 11', 'A dummy movie description 11.'),
-  ('Dummy Movie 12', '2022-12-01', 'Action', 'Dummy Director 12', 'A dummy movie description 12.'),
-  ('Dummy Movie 13', '2023-01-01', 'Comedy', 'Dummy Director 13', 'A dummy movie description 13.'),
-  ('Dummy Movie 14', '2023-02-01', 'Drama', 'Dummy Director 14', 'A dummy movie description 14.'),
-  ('Dummy Movie 15', '2023-03-01', 'Thriller', 'Dummy Director 15', 'A dummy movie description 15.'),
-  ('Dummy Movie 16', '2023-04-01', 'Family', 'Dummy Director 16', 'A dummy movie description 16.'),
-  ('Dummy Movie 17', '2023-05-01', 'Animation', 'Dummy Director 17', 'A dummy movie description 17.'),
-  ('Dummy Movie 18', '2023-06-01', 'Crime', 'Dummy Director 18', 'A dummy movie description 18.'),
-  ('Dummy Movie 19', '2023-07-01', 'Biography', 'Dummy Director 19', 'A dummy movie description 19.'),
-  ('Dummy Movie 20', '2023-08-01', 'History', 'Dummy Director 20', 'A dummy movie description 20.'),
-  ('Dummy Movie 21', '2023-09-01', 'Action', 'Dummy Director 21', 'A dummy movie description 21.'),
-  ('Dummy Movie 22', '2023-10-01', 'Comedy', 'Dummy Director 22', 'A dummy movie description 22.'),
-  ('Dummy Movie 23', '2023-11-01', 'Drama', 'Dummy Director 23', 'A dummy movie description 23.'),
-  ('Dummy Movie 24', '2023-12-01', 'Thriller', 'Dummy Director 24', 'A dummy movie description 24.'),
-  ('Dummy Movie 25', '2024-01-01', 'Sci-Fi', 'Dummy Director 25', 'A dummy movie description 25.'),
-  ('Dummy Movie 26', '2024-02-01', 'Romance', 'Dummy Director 26', 'A dummy movie description 26.'),
-  ('Dummy Movie 27', '2024-03-01', 'Action', 'Dummy Director 27', 'A dummy movie description 27.'),
-  ('Dummy Movie 28', '2024-04-01', 'Comedy', 'Dummy Director 28', 'A dummy movie description 28.'),
-  ('Dummy Movie 29', '2024-05-01', 'Drama', 'Dummy Director 29', 'A dummy movie description 29.'),
-  ('Dummy Movie 30', '2024-06-01', 'Thriller', 'Dummy Director 30', 'A dummy movie description 30.'),
-  ('Dummy Movie 31', '2024-07-01', 'Family', 'Dummy Director 31', 'A dummy movie description 31.'),
-  ('Dummy Movie 32', '2024-08-01', 'Animation', 'Dummy Director 32', 'A dummy movie description 32.'),
-  ('Dummy Movie 33', '2024-09-01', 'Crime', 'Dummy Director 33', 'A dummy movie description 33.'),
-  ('Dummy Movie 34', '2024-10-01', 'Biography', 'Dummy Director 34', 'A dummy movie description 34.'),
-  ('Dummy Movie 35', '2024-11-01', 'History', 'Dummy Director 35', 'A dummy movie description 35.'),
-  ('Dummy Movie 36', '2024-12-01', 'Action', 'Dummy Director 36', 'A dummy movie description 36.'),
-  ('Dummy Movie 37', '2025-01-01', 'Comedy', 'Dummy Director 37', 'A dummy movie description 37.'),
-  ('Dummy Movie 38', '2025-02-01', 'Drama', 'Dummy Director 38', 'A dummy movie description 38.'),
-  ('Dummy Movie 39', '2025-03-01', 'Thriller', 'Dummy Director 39', 'A dummy movie description 39.'),
-  ('Dummy Movie 40', '2025-04-01', 'Sci-Fi', 'Dummy Director 40', 'A dummy movie description 40.');
+INSERT INTO reviews (user_id, movie_id, rating, review_text)
+VALUES 
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 5, 'A dummy review text 1.'),
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a01', 5, 'A dummy review text 1.'),
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02', 4, 'A dummy review text 2.');

@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"moviepin/db"
+	"moviepin/db/movies"
 	"moviepin/handlers"
 	"net/http"
 )
@@ -9,8 +11,10 @@ import (
 func NewServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.Handle("/movies", handlers.NewMoviesHandler())
-	mux.Handle("/movies/", handlers.NewMoviesHandler())
+	moviesDB := movies.NewMovie(db.DB)
+
+	mux.Handle("/movies", handlers.NewMoviesHandler(moviesDB))
+	mux.Handle("/movies/", handlers.NewMoviesHandler(moviesDB))
 
 	return mux
 }

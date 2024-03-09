@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"moviepin/db"
+	"moviepin/db/movies"
 	"moviepin/models"
 	"moviepin/utils"
 )
@@ -37,11 +37,18 @@ const (
 	ErrFailedToReplaceMovies = "failed to replace movies"
 )
 
-type MoviesHandler struct{}
+type MoviesHandler struct {
+	db movies.MoviesRepository
+}
+
+// Returns a new MoviesHandler.
+func NewMoviesHandler(db movies.MoviesRepository) *MoviesHandler {
+	return &MoviesHandler{db: db}
+}
 
 // Responds with all the movies.
-func (mh *MoviesHandler) getMovies(w http.ResponseWriter, r *http.Request) {
-	movies, err := db.GetMovies()
+func (mh MoviesHandler) getMovies(w http.ResponseWriter, r *http.Request) {
+	movies, err := mh.db.GetMovies()
 
 	if err != nil {
 		utils.Logger.Println(err)
@@ -62,7 +69,7 @@ func (mh *MoviesHandler) getMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 // Responds with details of particular movie.
-func (mh *MoviesHandler) getMovie(w http.ResponseWriter, r *http.Request) {
+func (mh MoviesHandler) getMovie(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("rating") == "true" {
 		mh.getMovieRating(w, r)
 		return
@@ -71,7 +78,8 @@ func (mh *MoviesHandler) getMovie(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.GetIDFromPath(r.URL.Path)
 
 	if err != nil {
-		http.NotFound(w, r)
+		utils.Logger.Println(err)
+		http.Error(w, ErrFailedToGetMovie, http.StatusBadRequest)
 		return
 	}
 
@@ -83,9 +91,9 @@ func (mh *MoviesHandler) getMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	movie, err := db.GetMovie(id)
+	movie, err := mh.db.GetMovie(id)
 
-	if err == db.ErrNotExists {
+	if err == movies.ErrNotExists {
 		http.NotFound(w, r)
 		return
 	}
@@ -109,7 +117,7 @@ func (mh *MoviesHandler) getMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 // Adds list of movies sent in request.
-func (mh *MoviesHandler) postMovies(w http.ResponseWriter, r *http.Request) {
+func (mh MoviesHandler) postMovies(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 
 	if err != nil {
@@ -143,7 +151,7 @@ func (mh *MoviesHandler) postMovies(w http.ResponseWriter, r *http.Request) {
 
 	for _, movie := range movies {
 		go func(movie models.Movie) {
-			if err := db.AddMovie(movie); err != nil {
+			if err := mh.db.AddMovie(movie); err != nil {
 				utils.Logger.Print(err)
 
 				status <- MovieStatus{
@@ -186,13 +194,24 @@ func (mh *MoviesHandler) postMovies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(response.FailedMovies) == len(movies) {
+		http.Error(w, ErrFailedToAddMovie, http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+
+	if len(response.FailedMovies) > 0 {
+		w.WriteHeader(http.StatusMultiStatus)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+	}
+
 	w.Write(responseJSON)
 }
 
 // Updates a particular movie.
-func (mh *MoviesHandler) patchMovies(w http.ResponseWriter, r *http.Request) {
+func (mh MoviesHandler) patchMovie(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.GetIDFromPath(r.URL.Path)
 
 	if err != nil {
@@ -224,11 +243,11 @@ func (mh *MoviesHandler) patchMovies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingMovie, err := db.GetMovie(id)
+	existingMovie, err := mh.db.GetMovie(id)
 
 	if err != nil {
 		// If movie does not exist.
-		if err == db.ErrNotExists {
+		if err == movies.ErrNotExists {
 			http.NotFound(w, r)
 			return
 		}
@@ -296,10 +315,10 @@ func (mh *MoviesHandler) patchMovies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.UpdateMovie(id, *existingMovie)
+	err = mh.db.UpdateMovie(id, *existingMovie)
 
 	if err != nil {
-		if err == db.ErrNotExists {
+		if err == movies.ErrNotExists {
 			http.NotFound(w, r)
 			return
 		}
@@ -313,7 +332,7 @@ func (mh *MoviesHandler) patchMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 // Deletes a particular movie.
-func (mh *MoviesHandler) deleteMovie(w http.ResponseWriter, r *http.Request) {
+func (mh MoviesHandler) deleteMovie(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.GetIDFromPath(r.URL.Path)
 
 	if err != nil {
@@ -329,16 +348,16 @@ func (mh *MoviesHandler) deleteMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.DeleteMovie(id)
+	err = mh.db.DeleteMovie(id)
 
 	if err != nil {
-		if err == db.ErrNotExists {
+		if err == movies.ErrNotExists {
 			http.NotFound(w, r)
 			return
 		}
 
 		utils.Logger.Println(err)
-		http.Error(w, ErrFailedToDeleteMovie, http.StatusBadRequest)
+		http.Error(w, ErrFailedToDeleteMovie, http.StatusInternalServerError)
 		return
 	}
 
@@ -346,7 +365,7 @@ func (mh *MoviesHandler) deleteMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 // Updates a particular movie.
-func (mh *MoviesHandler) putMovie(w http.ResponseWriter, r *http.Request) {
+func (mh MoviesHandler) putMovie(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.GetIDFromPath(r.URL.Path)
 
 	if err != nil {
@@ -383,10 +402,10 @@ func (mh *MoviesHandler) putMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.UpdateMovie(id, movie)
+	err = mh.db.UpdateMovie(id, movie)
 
 	if err != nil {
-		if err == db.ErrNotExists {
+		if err == movies.ErrNotExists {
 			http.NotFound(w, r)
 			return
 		}
@@ -400,7 +419,7 @@ func (mh *MoviesHandler) putMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 // Updates whole collection of movies.
-func (mh *MoviesHandler) putMovies(w http.ResponseWriter, r *http.Request) {
+func (mh MoviesHandler) putMovies(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 
 	if err != nil {
@@ -425,7 +444,7 @@ func (mh *MoviesHandler) putMovies(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = db.ReplaceMovies(movies)
+	err = mh.db.ReplaceMovies(movies)
 
 	if err != nil {
 		utils.Logger.Print(err)
@@ -437,11 +456,12 @@ func (mh *MoviesHandler) putMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 // Responds with movie details along with its rating.
-func (mh *MoviesHandler) getMovieRating(w http.ResponseWriter, r *http.Request) {
+func (mh MoviesHandler) getMovieRating(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.GetIDFromPath(r.URL.Path)
 
 	if err != nil {
-		http.NotFound(w, r)
+		utils.Logger.Println(err)
+		http.Error(w, ErrFailedToGetMovie, http.StatusBadRequest)
 		return
 	}
 
@@ -453,9 +473,9 @@ func (mh *MoviesHandler) getMovieRating(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	_, err = db.GetMovie(id)
+	_, err = mh.db.GetMovie(id)
 
-	if err == db.ErrNotExists {
+	if err == movies.ErrNotExists {
 		http.NotFound(w, r)
 		return
 	}
@@ -466,7 +486,7 @@ func (mh *MoviesHandler) getMovieRating(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	review, err := db.GetMovieRating(id)
+	review, err := mh.db.GetMovieRating(id)
 
 	if err != nil {
 		utils.Logger.Println(err)
@@ -495,7 +515,7 @@ func (mh *MoviesHandler) getMovieRating(w http.ResponseWriter, r *http.Request) 
 }
 
 // Responds with allowed methods.
-func (mh *MoviesHandler) Options(w http.ResponseWriter, r *http.Request) {
+func (mh MoviesHandler) Options(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -503,7 +523,7 @@ func (mh *MoviesHandler) Options(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (mh *MoviesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (mh MoviesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	isCollectionPath := r.URL.Path == "/movies" || r.URL.Path == "/movies/"
 
 	switch r.Method {
@@ -529,7 +549,7 @@ func (mh *MoviesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if isCollectionPath {
 			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		} else {
-			mh.patchMovies(w, r)
+			mh.patchMovie(w, r)
 		}
 	case http.MethodDelete:
 		if isCollectionPath {
@@ -542,8 +562,4 @@ func (mh *MoviesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
-}
-
-func NewMoviesHandler() *MoviesHandler {
-	return &MoviesHandler{}
 }
